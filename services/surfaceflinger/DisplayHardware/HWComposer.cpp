@@ -53,11 +53,14 @@ HWComposer::HWComposer(
       mDpy(EGL_NO_DISPLAY), mSur(EGL_NO_SURFACE),
       mEventHandler(handler),
       mRefreshPeriod(refreshPeriod),
-      mVSyncCount(0), mDebugForceFakeVSync(false)
+      mVSyncCount(0), mDebugForceFakeVSync(false), mForceFakeVSync(false)
 {
     char value[PROPERTY_VALUE_MAX];
     property_get("debug.sf.no_hw_vsync", value, "0");
     mDebugForceFakeVSync = atoi(value);
+
+    property_get("sf.force_sw_vsync", value, "0");
+    mForceFakeVSync = atoi(value);
 
     bool needVSyncThread = false;
     int err = hw_get_module(HWC_HARDWARE_MODULE_ID, &mModule);
@@ -75,9 +78,10 @@ HWComposer::HWComposer(
                 memset(mCBContext.procs.zero, 0, sizeof(mCBContext.procs.zero));
             }
             if (mHwc->common.version >= HWC_DEVICE_API_VERSION_0_3) {
-                if (mDebugForceFakeVSync) {
+                if (mDebugForceFakeVSync || mForceFakeVSync) {
                     // make sure to turn h/w vsync off in "fake vsync" mode
                     mHwc->methods->eventControl(mHwc, HWC_EVENT_VSYNC, 0);
+                    needVSyncThread = true;
                 }
             } else {
                 needVSyncThread = true;
@@ -128,7 +132,7 @@ void HWComposer::vsync(int dpy, int64_t timestamp) {
 void HWComposer::eventControl(int event, int enabled) {
     status_t err = NO_ERROR;
     if (mHwc && mHwc->common.version >= HWC_DEVICE_API_VERSION_0_3) {
-        if (!mDebugForceFakeVSync) {
+        if (!mDebugForceFakeVSync || !mForceFakeVSync) {
             err = mHwc->methods->eventControl(mHwc, event, enabled);
             // error here should not happen -- not sure what we should
             // do if it does.
@@ -240,6 +244,8 @@ void HWComposer::dump(String8& result, char* buffer, size_t SIZE,
         result.append("Hardware Composer state:\n");
         result.appendFormat("  mDebugForceFakeVSync=%d\n",
                 mDebugForceFakeVSync);
+        result.appendFormat("  mForceFakeVSync=%d\n",
+                mForceFakeVSync);
         result.appendFormat("  numHwLayers=%u, flags=%08x\n",
                 mList->numHwLayers, mList->flags);
         result.append(

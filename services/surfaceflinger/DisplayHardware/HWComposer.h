@@ -145,6 +145,7 @@ private:
     size_t                  mVSyncCount;
     sp<VSyncThread>         mVSyncThread;
     bool                    mDebugForceFakeVSync;
+    bool                    mForceFakeVSync;
 };
 
 

@@ -65,9 +65,10 @@ private:
  * 
  * In fact this is an implementation of ANativeWindow on top of
  * the framebuffer.
- * 
- * Currently it is pretty simple, it manages only two buffers (the front and 
- * back buffer).
+ *
+ * It support get the framebuffer buffer count from framebuffer
+ * device, and currently it can support max 3 framebuffer, if no
+ * setting in framebuffer device, it use default 2 buffers.
  * 
  */
 
@@ -92,8 +93,15 @@ FramebufferNativeWindow::FramebufferNativeWindow()
         mUpdateOnDemand = (fbDev->setUpdateRect != 0);
         
         // initialize the buffer FIFO
-        mNumBuffers = NUM_FRAME_BUFFERS;
-        mNumFreeBuffers = NUM_FRAME_BUFFERS;
+        // get the buffer count from fbDev, if no, use the default count
+        if (fbDev->bufferCount > 0 && fbDev->bufferCount <= MAX_FRAME_BUFFERS) {
+            mNumBuffers = fbDev->bufferCount;
+            mNumFreeBuffers = fbDev->bufferCount;
+        } else {
+            mNumBuffers = DEFAULT_NUM_FRAME_BUFFERS;
+            mNumFreeBuffers = DEFAULT_NUM_FRAME_BUFFERS;
+        }
+
         mBufferHead = mNumBuffers-1;
 
         /*
@@ -154,10 +162,11 @@ FramebufferNativeWindow::FramebufferNativeWindow()
 FramebufferNativeWindow::~FramebufferNativeWindow() 
 {
     if (grDev) {
-        if (buffers[0] != NULL)
-            grDev->free(grDev, buffers[0]->handle);
-        if (buffers[1] != NULL)
-            grDev->free(grDev, buffers[1]->handle);
+
+        for (int i = 0; i < mNumBuffers; i++) {
+            if (buffers[i] != NULL)
+                grDev->free(grDev, buffers[i]->handle);
+        }
         gralloc_close(grDev);
     }
 
@@ -257,7 +266,16 @@ int FramebufferNativeWindow::queueBuffer(ANativeWindow* window,
 
     const int index = self->mCurrentBufferIndex;
     int res = fb->post(fb, handle);
-    self->front = static_cast<NativeBuffer*>(buffer);
+
+    // only change the front buffer pointer when only one buffer left,
+    // if we have buffer free, don't needs to change front pointer.
+    // otherwise it will dead-lock in this case in three buffer:
+    // queueBuffer() index=2 (front become buffer[2])
+    // queueBuffer() index=0 (front become buffer[0])
+    // dequeueBuffer() (return buffer[0] since bufferHead == 0)
+    // lockBuffer()  the front == dequeuedBuffer, it will the lockBuffer will infinite wait.
+    if (self->mNumFreeBuffers == 0)
+	self->front = static_cast<NativeBuffer*>(buffer);
     self->mNumFreeBuffers++;
     self->mCondition.broadcast();
     return res;

@@ -1176,6 +1176,8 @@ sp<ISurface> SurfaceFlinger::createSurface(
     sp<LayerBaseClient> layer;
     sp<ISurface> surfaceHandle;
 
+    ALOGD("- %S --", __func__);
+
     if (int32_t(w|h) < 0) {
         ALOGE("createSurface() failed, w or h is negative (w=%d, h=%d)",
                 int(w), int(h));
@@ -1217,7 +1219,7 @@ sp<ISurface> SurfaceFlinger::createSurface(
 
         setTransactionFlags(eTransactionNeeded);
     }
-
+    ALOGD("+ %S ++", __func__);
     return surfaceHandle;
 }
 

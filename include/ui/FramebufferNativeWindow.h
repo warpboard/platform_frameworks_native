@@ -28,7 +28,9 @@
 #include <ui/ANativeObjectBase.h>
 #include <ui/Rect.h>
 
-#define NUM_FRAME_BUFFERS  2
+#define DEFAULT_NUM_FRAME_BUFFERS  2
+#define MAX_FRAME_BUFFERS  3
+/* max frambuffer supported */
 
 extern "C" EGLNativeWindowType android_createDisplaySurface(void);
 
@@ -74,7 +76,10 @@ private:
     framebuffer_device_t* fbDev;
     alloc_device_t* grDev;
 
-    sp<NativeBuffer> buffers[NUM_FRAME_BUFFERS];
+    sp<NativeBuffer> buffers[MAX_FRAME_BUFFERS]; /* this array can not
+                                                  * use dymatic
+                                                  * allocate, make it
+                                                  * in a max value */
     sp<NativeBuffer> front;
     
     mutable Mutex mutex;

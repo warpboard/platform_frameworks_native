@@ -12,6 +12,12 @@
 #include <stdlib.h>
 #include <math.h>
 
+#ifdef __GNUC__
+#define _TEST_GLDUAL_UNUSED(x) x __attribute__((unused))
+#else
+#define _TEST_GLDUAL_UNUSED(x) x
+#endif /* __GNUC__ */
+
 static void printGLString(const char *name, GLenum s) {
     const char *v = (const char *) glGetString(s);
     ALOGI("GL %s = %s\n", name, v);
@@ -153,12 +159,12 @@ extern "C" {
     JNIEXPORT void JNICALL Java_com_android_gldual_GLDualLib_step(JNIEnv * env, jobject obj);
 };
 
-JNIEXPORT void JNICALL Java_com_android_gldual_GLDualLib_init(JNIEnv * env, jobject obj, jint width, jint height)
+JNIEXPORT void JNICALL Java_com_android_gldual_GLDualLib_init(JNIEnv * _TEST_GLDUAL_UNUSED(env), jobject _TEST_GLDUAL_UNUSED(obj), jint width, jint height)
 {
     setupGraphics(width, height);
 }
 
-JNIEXPORT void JNICALL Java_com_android_gldual_GLDualLib_step(JNIEnv * env, jobject obj)
+JNIEXPORT void JNICALL Java_com_android_gldual_GLDualLib_step(JNIEnv * _TEST_GLDUAL_UNUSED(env), jobject _TEST_GLDUAL_UNUSED(obj))
 {
     renderFrame();
 }

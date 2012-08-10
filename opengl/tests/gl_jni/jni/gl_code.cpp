@@ -16,6 +16,12 @@ GLfloat background;
 
 #define FIXED_ONE 0x10000
 
+#ifdef __GNUC__
+#define _TEST_GLJNI_UNUSED(x) x __attribute__((unused))
+#else
+#define _TEST_GLJNI_UNUSED(x) x
+#endif /* __GNUC__ */
+
 static void printGLString(const char *name, GLenum s) {
     const char *v = (const char *) glGetString(s);
     ALOGI("GL %s = %s\n", name, v);
@@ -140,13 +146,13 @@ extern "C" {
     JNIEXPORT void JNICALL Java_com_android_gljni_GLJNILib_changeBackground(JNIEnv * env, jobject obj);
 };
 
-JNIEXPORT void JNICALL Java_com_android_gljni_GLJNILib_init(JNIEnv * env, jobject obj,  jint width, jint height)
+JNIEXPORT void JNICALL Java_com_android_gljni_GLJNILib_init(JNIEnv * _TEST_GLJNI_UNUSED(env), jobject _TEST_GLJNI_UNUSED(obj),  jint width, jint height)
 {
     init_scene(width, height);
     create_texture();
 }
 
-JNIEXPORT void JNICALL Java_com_android_gljni_GLJNILib_step(JNIEnv * env, jobject obj)
+JNIEXPORT void JNICALL Java_com_android_gljni_GLJNILib_step(JNIEnv * _TEST_GLJNI_UNUSED(env), jobject _TEST_GLJNI_UNUSED(obj))
 {
     const GLfloat vertices[] = {
             -1,  -1,  0,
@@ -177,7 +183,7 @@ JNIEXPORT void JNICALL Java_com_android_gljni_GLJNILib_step(JNIEnv * env, jobjec
     glDrawElements(GL_TRIANGLES, nelem, GL_UNSIGNED_SHORT, quadIndices);
 }
 
-JNIEXPORT void JNICALL Java_com_android_gljni_GLJNILib_changeBackground(JNIEnv * env, jobject obj)
+JNIEXPORT void JNICALL Java_com_android_gljni_GLJNILib_changeBackground(JNIEnv * _TEST_GLJNI_UNUSED(env), jobject _TEST_GLJNI_UNUSED(obj))
 {
     background = 1.0f - background;
 }

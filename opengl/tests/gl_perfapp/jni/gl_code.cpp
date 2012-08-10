@@ -15,6 +15,11 @@
 
 #include "../../gl_perf/fill_common.cpp"
 
+#ifdef __GNUC__
+#define _TEST_GLPERFAPP_UNUSED(x) x __attribute__((unused))
+#else
+#define _TEST_GLPERFAPP_UNUSED(x) x
+#endif /* __GNUC__ */
 
 //////////////////////////
 
@@ -63,7 +68,7 @@ extern "C" {
     JNIEXPORT void JNICALL Java_com_android_glperf_GLPerfLib_step(JNIEnv * env, jobject obj);
 };
 
-JNIEXPORT void JNICALL Java_com_android_glperf_GLPerfLib_init(JNIEnv * env, jobject obj,  jint width, jint height)
+JNIEXPORT void JNICALL Java_com_android_glperf_GLPerfLib_init(JNIEnv * _TEST_GLPERFAPP_UNUSED(env), jobject _TEST_GLPERFAPP_UNUSED(obj),  jint width, jint height)
 {
     gWidth = width;
     gHeight = height;
@@ -89,7 +94,7 @@ JNIEXPORT void JNICALL Java_com_android_glperf_GLPerfLib_init(JNIEnv * env, jobj
     }
 }
 
-JNIEXPORT void JNICALL Java_com_android_glperf_GLPerfLib_step(JNIEnv * env, jobject obj)
+JNIEXPORT void JNICALL Java_com_android_glperf_GLPerfLib_step(JNIEnv * _TEST_GLPERFAPP_UNUSED(env), jobject _TEST_GLPERFAPP_UNUSED(obj))
 {
     if (! done) {
         if (stateClock > 0 && ((stateClock & 1) == 0)) {

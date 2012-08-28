@@ -24,7 +24,6 @@
 -->
 <permissions>
     <feature name="android.hardware.location" />
-    <feature name="android.hardware.location.network" />
     <feature name="android.hardware.sensor.compass" />
     <feature name="android.hardware.sensor.accelerometer" />
     <feature name="android.hardware.bluetooth" />
@@ -35,6 +34,8 @@
     <feature name="android.hardware.screen.portrait" />
     <feature name="android.hardware.screen.landscape" />
     <!-- devices with GPS must include android.hardware.location.gps.xml -->
+    <!-- devices with Network Location Provider  must include
+         android.hardware.location.xml -->
     <!-- devices with a rear-facing camera must include one of these as appropriate:
          android.hardware.camera.xml or 
          android.hardware.camera.autofocus.xml or 

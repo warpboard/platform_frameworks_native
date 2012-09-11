@@ -263,6 +263,9 @@ enum {
     AKEYCODE_RO              = 217,
     AKEYCODE_KANA            = 218,
     AKEYCODE_ASSIST          = 219,
+    AKEYCODE_VENDOR_1        = 220,
+    AKEYCODE_VENDOR_2        = 221,
+    AKEYCODE_VENDOR_3        = 222,
 
     // NOTE: If you add a new keycode here you must also add it to several other files.
     //       Refer to frameworks/base/core/java/android/view/KeyEvent.java for the full list.

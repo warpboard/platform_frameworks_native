@@ -55,7 +55,7 @@ public:
      * empty the vector
      */
 
-    inline  void            clear()             { VectorImpl::clear(); }
+    inline  ssize_t         clear()             { return VectorImpl::clear(); }
 
     /*! 
      * vector stats

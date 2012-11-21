@@ -65,7 +65,7 @@ public:
      * empty the vector
      */
 
-    inline  void            clear()             { VectorImpl::clear(); }
+    inline ssize_t          clear()             { return VectorImpl::clear(); }
 
     /*! 
      * vector stats
@@ -135,11 +135,11 @@ public:
     //! insert one or several items initialized from a prototype item
             ssize_t         insertAt(const TYPE& prototype_item, size_t index, size_t numItems = 1);
     //! pop the top of the stack (removes the last element). No-op if the stack's empty
-    inline  void            pop();
+    inline  ssize_t         pop();
     //! pushes an item initialized with its default constructor
-    inline  void            push();
+    inline  ssize_t         push();
     //! pushes an item on the top of the stack
-            void            push(const TYPE& item);
+            ssize_t         push(const TYPE& item);
     //! same as push() but returns the index the item was added at (or an error)
     inline  ssize_t         add();
     //! same as push() but returns the index the item was added at (or an error)
@@ -180,16 +180,25 @@ public:
      typedef TYPE const* const_iterator;
 
      inline iterator begin() { return editArray(); }
-     inline iterator end()   { return editArray() + size(); }
+     inline iterator end()   {
+         iterator ret = editArray();
+         if (ret != 0) {
+             return ret + size();
+         }
+         return 0;
+     }
      inline const_iterator begin() const { return array(); }
      inline const_iterator end() const   { return array() + size(); }
      inline void reserve(size_t n) { setCapacity(n); }
      inline bool empty() const{ return isEmpty(); }
-     inline void push_back(const TYPE& item)  { insertAt(item, size(), 1); }
-     inline void push_front(const TYPE& item) { insertAt(item, 0, 1); }
+     inline ssize_t push_back(const TYPE& item)  { return insertAt(item, size(), 1); }
+     inline ssize_t push_front(const TYPE& item) { return insertAt(item, 0, 1); }
      inline iterator erase(iterator pos) {
-         ssize_t index = removeItemsAt(pos-array());
-         return begin() + index;
+         size_t index = pos - array();
+         if (removeItemsAt(index) == index) {
+             return begin() + index;
+         }
+         return 0;
      }
 
 protected:
@@ -323,7 +332,7 @@ ssize_t Vector<TYPE>::insertAt(const TYPE& item, size_t index, size_t numItems) 
 }
 
 template<class TYPE> inline
-void Vector<TYPE>::push(const TYPE& item) {
+ssize_t Vector<TYPE>::push(const TYPE& item) {
     return VectorImpl::push(&item);
 }
 
@@ -343,13 +352,13 @@ ssize_t Vector<TYPE>::insertAt(size_t index, size_t numItems) {
 }
 
 template<class TYPE> inline
-void Vector<TYPE>::pop() {
-    VectorImpl::pop();
+ssize_t Vector<TYPE>::pop() {
+    return VectorImpl::pop();
 }
 
 template<class TYPE> inline
-void Vector<TYPE>::push() {
-    VectorImpl::push();
+ssize_t Vector<TYPE>::push() {
+    return VectorImpl::push();
 }
 
 template<class TYPE> inline

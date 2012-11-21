@@ -92,6 +92,8 @@ void* VectorImpl::editArrayImpl()
                 _do_copy(sb->data(), mStorage, mCount);
                 release_storage();
                 mStorage = sb->data();
+            } else {
+                return 0;
             }
         }
     }
@@ -215,20 +217,22 @@ status_t VectorImpl::sort(VectorImpl::compar_r_t cmp, void* state)
     return NO_ERROR;
 }
 
-void VectorImpl::pop()
+ssize_t VectorImpl::pop()
 {
-    if (size())
-        removeItemsAt(size()-1, 1);
+    if (size()) {
+        return removeItemsAt(size()-1, 1);
+    }
+    return BAD_INDEX;
 }
 
-void VectorImpl::push()
+ssize_t VectorImpl::push()
 {
-    push(0);
+    return push(0);
 }
 
-void VectorImpl::push(const void* item)
+ssize_t VectorImpl::push(const void* item)
 {
-    insertAt(item, size());
+    return insertAt(item, size());
 }
 
 ssize_t VectorImpl::add()
@@ -277,8 +281,7 @@ ssize_t VectorImpl::removeItemsAt(size_t index, size_t count)
 
     if ((index+count) > size())
         return BAD_VALUE;
-   _shrink(index, count);
-   return index;
+    return _shrink(index, count);
 }
 
 void VectorImpl::finish_vector()
@@ -288,9 +291,9 @@ void VectorImpl::finish_vector()
     mCount = 0;
 }
 
-void VectorImpl::clear()
+ssize_t VectorImpl::clear()
 {
-    _shrink(0, mCount);
+    return _shrink(0, mCount);
 }
 
 void* VectorImpl::editItemLocation(size_t index)
@@ -374,6 +377,9 @@ void* VectorImpl::_grow(size_t where, size_t amount)
         {
             const SharedBuffer* cur_sb = SharedBuffer::bufferFromData(mStorage);
             SharedBuffer* sb = cur_sb->editResize(new_capacity * mItemSize);
+            if (!sb) {
+                return 0;
+            }
             mStorage = sb->data();
         } else {
             SharedBuffer* sb = SharedBuffer::alloc(new_capacity * mItemSize);
@@ -389,10 +395,15 @@ void* VectorImpl::_grow(size_t where, size_t amount)
                 }
                 release_storage();
                 mStorage = const_cast<void*>(array);
+            } else {
+                return 0;
             }
         }
     } else {
         void* array = editArrayImpl();
+        if (!array) {
+            return 0;
+        }
         if (where != mCount) {
             const void* from = reinterpret_cast<const uint8_t *>(array) + where*mItemSize;
             void* to = reinterpret_cast<uint8_t *>(array) + (where+amount)*mItemSize;
@@ -404,10 +415,10 @@ void* VectorImpl::_grow(size_t where, size_t amount)
     return free_space;
 }
 
-void VectorImpl::_shrink(size_t where, size_t amount)
+ssize_t VectorImpl::_shrink(size_t where, size_t amount)
 {
     if (!mStorage)
-        return;
+        return (ssize_t)NO_MEMORY;
 
 //    ALOGV("_shrink(this=%p, where=%d, amount=%d) count=%d, capacity=%d",
 //        this, (int)where, (int)amount, (int)mCount, (int)capacity());
@@ -426,6 +437,9 @@ void VectorImpl::_shrink(size_t where, size_t amount)
         {
             const SharedBuffer* cur_sb = SharedBuffer::bufferFromData(mStorage);
             SharedBuffer* sb = cur_sb->editResize(new_capacity * mItemSize);
+            if (!sb) {
+                return (ssize_t)NO_MEMORY;
+            }
             mStorage = sb->data();
         } else {
             SharedBuffer* sb = SharedBuffer::alloc(new_capacity * mItemSize);
@@ -441,10 +455,15 @@ void VectorImpl::_shrink(size_t where, size_t amount)
                 }
                 release_storage();
                 mStorage = const_cast<void*>(array);
+            } else {
+                return (ssize_t)NO_MEMORY;
             }
         }
     } else {
         void* array = editArrayImpl();
+        if (!array) {
+            return (ssize_t)NO_MEMORY;
+        }
         void* to = reinterpret_cast<uint8_t *>(array) + where*mItemSize;
         _do_destroy(to, amount);
         if (where != new_size) {
@@ -453,6 +472,7 @@ void VectorImpl::_shrink(size_t where, size_t amount)
         }
     }
     mCount = new_size;
+    return where;
 }
 
 size_t VectorImpl::itemSize() const {
@@ -613,9 +633,9 @@ ssize_t SortedVectorImpl::remove(const void* item)
 {
     ssize_t i = indexOf(item);
     if (i>=0) {
-        VectorImpl::removeItemsAt(i, 1);
+        return VectorImpl::removeItemsAt(i, 1);
     }
-    return i;
+    return NAME_NOT_FOUND;
 }
 
 void SortedVectorImpl::reservedSortedVectorImpl1() { };

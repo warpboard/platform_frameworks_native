@@ -74,9 +74,9 @@ public:
             /*! add/insert/replace items */
             ssize_t         insertAt(size_t where, size_t numItems = 1);
             ssize_t         insertAt(const void* item, size_t where, size_t numItems = 1);
-            void            pop();
-            void            push();
-            void            push(const void* item);
+            ssize_t         pop();
+            ssize_t         push();
+            ssize_t         push(const void* item);
             ssize_t         add();
             ssize_t         add(const void* item);
             ssize_t         replaceAt(size_t index);
@@ -84,7 +84,7 @@ public:
 
             /*! remove items */
             ssize_t         removeItemsAt(size_t index, size_t count = 1);
-            void            clear();
+            ssize_t         clear();
 
             const void*     itemLocation(size_t index) const;
             void*           editItemLocation(size_t index);
@@ -117,7 +117,7 @@ protected:
     
 private:
         void* _grow(size_t where, size_t amount);
-        void  _shrink(size_t where, size_t amount);
+        ssize_t _shrink(size_t where, size_t amount);
 
         inline void _do_construct(void* storage, size_t num) const;
         inline void _do_destroy(void* storage, size_t num) const;

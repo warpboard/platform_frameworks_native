@@ -96,6 +96,7 @@ SurfaceFlinger::SurfaceFlinger()
         mDebugRegion(0),
         mDebugDDMS(0),
         mDebugDisableHWC(0),
+        mDebugShowFpsLogcat(0),
         mDebugDisableTransformHint(0),
         mDebugInSwapBuffers(0),
         mLastSwapBufferTime(0),
@@ -986,6 +987,11 @@ void SurfaceFlinger::doComposition() {
             // transform the dirty region into this screen's coordinate space
             const Region dirtyRegion(hw->getDirtyRegion(repaintEverything));
 
+            // handle FPS counting
+            if (CC_UNLIKELY(mDebugShowFpsLogcat)) {
+                 doDebugShowFPS();
+            }
+
             // repaint the framebuffer (if needed)
             doDisplayComposition(hw, dirtyRegion);
 
@@ -1601,6 +1607,25 @@ void SurfaceFlinger::drawWormhole(const sp<const DisplayDevice>& hw,
         };
         glVertexPointer(2, GL_FLOAT, 0, vertices);
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+    }
+}
+
+void SurfaceFlinger::doDebugShowFPS() const
+{
+    static int mFrameCount = 0;
+    static int mLastFrameCount = 0;
+    static nsecs_t mLastFpsTime = 0;
+    static float mFps = 0;
+
+    mFrameCount++;
+    nsecs_t now = systemTime();
+    nsecs_t diff = now - mLastFpsTime;
+    if (diff > ms2ns(250)) {
+        mFps =  ((mFrameCount - mLastFrameCount) * float(s2ns(1))) / diff;
+        mLastFpsTime = now;
+        mLastFrameCount = mFrameCount;
+
+        LOGI("refresh-rate = %.1f fps", mFps);
     }
 }
 
@@ -2464,7 +2489,10 @@ status_t SurfaceFlinger::onTransact(
         int n;
         switch (code) {
             case 1000: // SHOW_CPU, NOT SUPPORTED ANYMORE
-            case 1001: // SHOW_FPS, NOT SUPPORTED ANYMORE
+                return NO_ERROR;
+            case 1001: // SHOW_FPS
+                n = data.readInt32();
+                mDebugShowFpsLogcat = n ? 1 : 0;
                 return NO_ERROR;
             case 1002:  // SHOW_UPDATES
                 n = data.readInt32();

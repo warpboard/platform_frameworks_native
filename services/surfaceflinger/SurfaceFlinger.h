@@ -349,6 +349,7 @@ private:
             status_t electronBeamOnAnimationImplLocked();
 
             void        debugFlashRegions();
+            void        debugShowFPS() const;
             void        drawWormhole() const;
 
             void        startBootAnim();
@@ -406,6 +407,7 @@ private:
                 int                         mDebugRegion;
                 int                         mDebugDDMS;
                 int                         mDebugDisableHWC;
+                int                         mDebugShowFpsLogcat;
                 int                         mDebugDisableTransformHint;
                 volatile nsecs_t            mDebugInSwapBuffers;
                 nsecs_t                     mLastSwapBufferTime;

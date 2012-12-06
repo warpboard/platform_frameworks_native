@@ -90,6 +90,7 @@ SurfaceFlinger::SurfaceFlinger()
         mDebugRegion(0),
         mDebugDDMS(0),
         mDebugDisableHWC(0),
+        mDebugShowFpsLogcat(0),
         mDebugDisableTransformHint(0),
         mDebugInSwapBuffers(0),
         mLastSwapBufferTime(0),
@@ -442,6 +443,10 @@ void SurfaceFlinger::onMessageReceived(int32_t what)
             }
 
             if (CC_LIKELY(hw.canDraw())) {
+                // handle FPS counting
+                if (CC_UNLIKELY(mDebugShowFpsLogcat)) {
+                     debugShowFPS();
+                }
                 // repaint the framebuffer (if needed)
                 handleRepaint();
                 // inform the h/w that we're done compositing
@@ -1050,6 +1055,25 @@ status_t SurfaceFlinger::addLayer_l(const sp<LayerBase>& layer)
 {
     ssize_t i = mCurrentState.layersSortedByZ.add(layer);
     return (i < 0) ? status_t(i) : status_t(NO_ERROR);
+}
+
+void SurfaceFlinger::debugShowFPS() const
+{
+    static int mFrameCount = 0;
+    static int mLastFrameCount = 0;
+    static nsecs_t mLastFpsTime = 0;
+    static float mFps = 0;
+
+    mFrameCount++;
+    nsecs_t now = systemTime();
+    nsecs_t diff = now - mLastFpsTime;
+    if (diff > ms2ns(250)) {
+        mFps =  ((mFrameCount - mLastFrameCount) * float(s2ns(1))) / diff;
+        mLastFpsTime = now;
+        mLastFrameCount = mFrameCount;
+
+        LOGI("refresh-rate = %.1f fps", mFps);
+    }
 }
 
 ssize_t SurfaceFlinger::addClientLayer(const sp<Client>& client,
@@ -1717,7 +1741,10 @@ status_t SurfaceFlinger::onTransact(
         int n;
         switch (code) {
             case 1000: // SHOW_CPU, NOT SUPPORTED ANYMORE
-            case 1001: // SHOW_FPS, NOT SUPPORTED ANYMORE
+                return NO_ERROR;
+            case 1001: // SHOW_FPS
+                n = data.readInt32();
+                mDebugShowFpsLogcat = n ? 1 : 0;
                 return NO_ERROR;
             case 1002:  // SHOW_UPDATES
                 n = data.readInt32();

@@ -25,8 +25,8 @@
 
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
-#include <GLES/gl.h>
-#include <GLES/glext.h>
+#include <GLES3/gl3.h>
+#include <GLES3/gl3ext.h>
 
 #include <cutils/log.h>
 #include <cutils/atomic.h>
@@ -456,7 +456,7 @@ EGLContext eglCreateContext(EGLDisplay dpy, EGLConfig config,
                     if (attr == EGL_CONTEXT_CLIENT_VERSION) {
                         if (value == 1) {
                             version = egl_connection_t::GLESv1_INDEX;
-                        } else if (value == 2) {
+                        } else if (value == 2 || value == 3) {
                             version = egl_connection_t::GLESv2_INDEX;
                         }
                     }

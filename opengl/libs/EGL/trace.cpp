@@ -21,8 +21,8 @@
 
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
-#include <GLES/gl.h>
-#include <GLES/glext.h>
+#include <GLES3/gl3.h>
+#include <GLES3/gl3ext.h>
 
 #include <cutils/log.h>
 

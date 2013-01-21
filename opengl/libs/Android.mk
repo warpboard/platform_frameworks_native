@@ -145,6 +145,10 @@ ifeq ($(ARCH_ARM_HAVE_TLS_REGISTER),true)
   LOCAL_CFLAGS += -DHAVE_ARM_TLS_REGISTER
 endif
 
+ifeq ($(HAVE_OPENGLES_V3),true)
+  LOCAL_CFLAGS += -DHAVE_OPENGLES_V3
+endif
+
 include $(BUILD_SHARED_LIBRARY)
 
 ###############################################################################

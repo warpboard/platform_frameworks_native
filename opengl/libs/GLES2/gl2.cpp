@@ -20,8 +20,8 @@
 
 #include <sys/ioctl.h>
 
-#include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
+#include <GLES3/gl3.h>
+#include <GLES3/gl3ext.h>
 
 #include <cutils/log.h>
 #include <cutils/properties.h>
@@ -86,8 +86,13 @@ using namespace android;
 
 
 extern "C" {
+#ifdef HAVE_OPENGLES_V3
+#include "gl3_api.in"
+#include "gl3ext_api.in"
+#else
 #include "gl2_api.in"
 #include "gl2ext_api.in"
+#endif
 }
 
 #undef API_ENTRY

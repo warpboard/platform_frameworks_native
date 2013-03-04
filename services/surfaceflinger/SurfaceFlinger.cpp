@@ -1520,7 +1520,10 @@ void SurfaceFlinger::doComposeSurfaces(const sp<const DisplayDevice>& hw, const 
 
     const bool hasGlesComposition = hwc.hasGlesComposition(id) || (cur==end);
     if (hasGlesComposition) {
-        DisplayDevice::makeCurrent(mEGLDisplay, hw, mEGLContext);
+        if (!DisplayDevice::makeCurrent(mEGLDisplay, hw, mEGLContext)) {
+            ALOGW("DisplayDevice::makeCurrent failed. Aborting surface composition");
+            return;
+        }
 
         // set the frame buffer
         glMatrixMode(GL_MODELVIEW);

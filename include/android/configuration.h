@@ -112,6 +112,8 @@ enum {
     ACONFIGURATION_UI_MODE = 0x1000,
     ACONFIGURATION_SMALLEST_SCREEN_SIZE = 0x2000,
     ACONFIGURATION_LAYOUTDIR = 0x4000,
+
+    ACONFIGURATION_MNC_UNDEFINED = 0xffff,
 };
 
 /**
@@ -147,12 +149,12 @@ int32_t AConfiguration_getMcc(AConfiguration* config);
 void AConfiguration_setMcc(AConfiguration* config, int32_t mcc);
 
 /**
- * Return the current MNC set in the configuration.  0 if not set.
+ * Return the current MNC set in the configuration.  ACONFIGURATION_MNC_UNDEFINED if not set.
  */
 int32_t AConfiguration_getMnc(AConfiguration* config);
 
 /**
- * Set the current MNC in the configuration.  0 to clear.
+ * Set the current MNC in the configuration.  ACONFIGURATION_MNC_UNDEFINED to clear.
  */
 void AConfiguration_setMnc(AConfiguration* config, int32_t mnc);
 

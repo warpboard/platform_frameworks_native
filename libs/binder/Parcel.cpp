@@ -30,6 +30,7 @@
 #include <utils/TextOutput.h>
 #include <utils/misc.h>
 #include <utils/Flattenable.h>
+#include <utils/UniquePtr.h>
 #include <cutils/ashmem.h>
 
 #include <private/binder/binder_module.h>
@@ -1419,11 +1420,13 @@ status_t Parcel::continueWrite(size_t desired)
 
         // If there is a different owner, we need to take
         // posession.
-        uint8_t* data = (uint8_t*)malloc(desired);
-        if (!data) {
+        UniquePtr<uint8_t> data(static_cast<uint8_t*>(malloc(desired)));
+
+        if (data.get() == NULL) {
             mError = NO_MEMORY;
             return NO_MEMORY;
         }
+
         size_t* objects = NULL;
         
         if (objectsSize) {
@@ -1442,7 +1445,7 @@ status_t Parcel::continueWrite(size_t desired)
         }
         
         if (mData) {
-            memcpy(data, mData, mDataSize < desired ? mDataSize : desired);
+            memcpy(data.get(), mData, mDataSize < desired ? mDataSize : desired);
         }
         if (objects && mObjects) {
             memcpy(objects, mObjects, objectsSize*sizeof(size_t));
@@ -1451,7 +1454,7 @@ status_t Parcel::continueWrite(size_t desired)
         mOwner(this, mData, mDataSize, mObjects, mObjectsSize, mOwnerCookie);
         mOwner = NULL;
 
-        mData = data;
+        mData = data.release();
         mObjects = objects;
         mDataSize = (mDataSize < desired) ? mDataSize : desired;
         ALOGV("continueWrite Setting data size of %p to %d\n", this, mDataSize);
@@ -1474,22 +1477,27 @@ status_t Parcel::continueWrite(size_t desired)
             }
             size_t* objects =
                 (size_t*)realloc(mObjects, objectsSize*sizeof(size_t));
-            if (objects) {
-                mObjects = objects;
+
+            if (!objects) {
+                mError = NO_MEMORY;
+                return NO_MEMORY;
             }
+
+            mObjects = objects;
             mObjectsSize = objectsSize;
             mNextObjectHint = 0;
         }
 
         // We own the data, so we can just do a realloc().
         if (desired > mDataCapacity) {
-            uint8_t* data = (uint8_t*)realloc(mData, desired);
-            if (data) {
-                mData = data;
-                mDataCapacity = desired;
-            } else if (desired > mDataCapacity) {
+            UniquePtr<uint8_t> data(static_cast<uint8_t*>(realloc(mData, desired)));
+            if (data.get() == NULL) {
                 mError = NO_MEMORY;
                 return NO_MEMORY;
+            }
+            else {
+                mData = data.release();
+                mDataCapacity = desired;
             }
         } else {
             if (mDataSize > desired) {
@@ -1504,18 +1512,20 @@ status_t Parcel::continueWrite(size_t desired)
         
     } else {
         // This is the first data.  Easy!
-        uint8_t* data = (uint8_t*)malloc(desired);
-        if (!data) {
+
+        UniquePtr<uint8_t> data(static_cast<uint8_t*>(malloc(desired)));
+
+        if (data.get() == NULL) {
             mError = NO_MEMORY;
             return NO_MEMORY;
         }
-        
+
         if(!(mDataCapacity == 0 && mObjects == NULL
              && mObjectsCapacity == 0)) {
             ALOGE("continueWrite: %d/%p/%d/%d", mDataCapacity, mObjects, mObjectsCapacity, desired);
         }
         
-        mData = data;
+        mData = data.release();
         mDataSize = mDataPos = 0;
         ALOGV("continueWrite Setting data size of %p to %d\n", this, mDataSize);
         ALOGV("continueWrite Setting data pos of %p to %d\n", this, mDataPos);

@@ -1472,6 +1472,8 @@ status_t Parcel::continueWrite(size_t desired)
         if (objectsSize) {
             objects = (size_t*)malloc(objectsSize*sizeof(size_t));
             if (!objects) {
+                if (data) free(data);
+                
                 mError = NO_MEMORY;
                 return NO_MEMORY;
             }
@@ -1517,9 +1519,13 @@ status_t Parcel::continueWrite(size_t desired)
             }
             size_t* objects =
                 (size_t*)realloc(mObjects, objectsSize*sizeof(size_t));
-            if (objects) {
-                mObjects = objects;
+
+            if (!objects) {
+                mError = NO_MEMORY;
+                return NO_MEMORY;
             }
+
+            mObjects = objects;
             mObjectsSize = objectsSize;
             mNextObjectHint = 0;
         }
@@ -1552,7 +1558,7 @@ status_t Parcel::continueWrite(size_t desired)
             mError = NO_MEMORY;
             return NO_MEMORY;
         }
-        
+
         if(!(mDataCapacity == 0 && mObjects == NULL
              && mObjectsCapacity == 0)) {
             ALOGE("continueWrite: %d/%p/%d/%d", mDataCapacity, mObjects, mObjectsCapacity, desired);

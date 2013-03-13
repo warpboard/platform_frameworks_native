@@ -31,6 +31,12 @@ MemoryBase::MemoryBase(const sp<IMemoryHeap>& heap,
 {
 }
 
+MemoryBase::MemoryBase(const sp<IMemoryHeap>& heap,
+        long offset, unsigned int size)
+    : mSize(size), mOffset(offset), mHeap(heap)
+{
+}
+
 sp<IMemoryHeap> MemoryBase::getMemory(ssize_t* offset, size_t* size) const
 {
     if (offset) *offset = mOffset;

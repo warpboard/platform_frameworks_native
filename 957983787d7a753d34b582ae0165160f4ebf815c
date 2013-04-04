@@ -1,0 +1,9 @@
+Verified+1: Deckard Autoverifier <deckard@android.com>
+Code-Review+1: Stephen Smalley <sds@tycho.nsa.gov>
+Code-Review+2: Geremy Condra <gcondra@google.com>
+Code-Review+1: William Roberts <w.roberts@sta.samsung.com>
+Submitted-by: Geremy Condra <gcondra@google.com>
+Submitted-at: Thu, 04 Apr 2013 23:38:13 +0000
+Reviewed-on: https://android-review.googlesource.com/55243
+Project: platform/frameworks/native
+Branch: refs/heads/master

@@ -537,6 +537,7 @@ private:
 
     // mTransformHint is used to optimize for screen rotations
     uint32_t mTransformHint;
+    uint32_t mFrameLost;
 };
 
 // ----------------------------------------------------------------------------

@@ -129,6 +129,11 @@ static int do_idmap(char **arg, char reply[REPLY_MAX])
     return idmap(arg[0], arg[1], atoi(arg[2]));
 }
 
+static int do_rm_idmap(char **arg, char reply[REPLY_MAX])
+{
+    return rm_idmap(arg[0]);
+}
+
 struct cmdinfo {
     const char *name;
     unsigned numargs;
@@ -153,6 +158,7 @@ struct cmdinfo cmds[] = {
     { "mkuserdata",           4, do_mk_user_data },
     { "rmuser",               1, do_rm_user },
     { "idmap",                3, do_idmap },
+    { "rmidmap",              1, do_rm_idmap },
 };
 
 static int readx(int s, void *_buf, int count)

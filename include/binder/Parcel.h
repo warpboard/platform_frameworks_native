@@ -92,6 +92,7 @@ public:
     status_t            writeUnpadded(const void* data, size_t len);
     status_t            writeInt32(int32_t val);
     status_t            writeInt64(int64_t val);
+    status_t            writePointer(uintptr_t val);
     status_t            writeFloat(float val);
     status_t            writeDouble(double val);
     status_t            writeIntPtr(intptr_t val);
@@ -146,6 +147,8 @@ public:
     status_t            readInt32(int32_t *pArg) const;
     int64_t             readInt64() const;
     status_t            readInt64(int64_t *pArg) const;
+    uintptr_t           readPointer() const;
+    status_t            readPointer(uintptr_t *pArg) const;
     float               readFloat() const;
     status_t            readFloat(float *pArg) const;
     double              readDouble() const;

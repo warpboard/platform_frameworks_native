@@ -383,7 +383,8 @@ EGLBoolean egl_window_surface_v2_t::connect()
     // wait for the buffer
     sp<Fence> fence(new Fence(fenceFd));
     if (fence->wait(Fence::TIMEOUT_NEVER) != NO_ERROR) {
-        nativeWindow->cancelBuffer(nativeWindow, buffer, fenceFd);
+        if (nativeWindow->cancelBuffer)
+            nativeWindow->cancelBuffer(nativeWindow, buffer, fenceFd);
         return setError(EGL_BAD_ALLOC, EGL_FALSE);
     }
 
@@ -421,7 +422,8 @@ void egl_window_surface_v2_t::disconnect()
         unlock(buffer);
     }
     if (buffer) {
-        nativeWindow->cancelBuffer(nativeWindow, buffer, -1);
+        if (nativeWindow->cancelBuffer)
+            nativeWindow->cancelBuffer(nativeWindow, buffer, -1);
         buffer->common.decRef(&buffer->common);
         buffer = 0;
     }
@@ -533,7 +535,8 @@ EGLBoolean egl_window_surface_v2_t::swapBuffers()
     if (nativeWindow->dequeueBuffer(nativeWindow, &buffer, &fenceFd) == NO_ERROR) {
         sp<Fence> fence(new Fence(fenceFd));
         if (fence->wait(Fence::TIMEOUT_NEVER)) {
-            nativeWindow->cancelBuffer(nativeWindow, buffer, fenceFd);
+            if (nativeWindow->cancelBuffer)
+                nativeWindow->cancelBuffer(nativeWindow, buffer, fenceFd);
             return setError(EGL_BAD_ALLOC, EGL_FALSE);
         }
 

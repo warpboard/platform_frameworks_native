@@ -312,8 +312,12 @@ FloatRect Layer::computeCrop(const sp<const DisplayDevice>& hw) const {
         int winWidth = s.active.w;
         int winHeight = s.active.h;
         if (invTransform & NATIVE_WINDOW_TRANSFORM_ROT_90) {
-            invTransform ^= NATIVE_WINDOW_TRANSFORM_FLIP_V |
-                    NATIVE_WINDOW_TRANSFORM_FLIP_H;
+            if ((invTransform == NATIVE_WINDOW_TRANSFORM_ROT_90) ||
+                (invTransform == NATIVE_WINDOW_TRANSFORM_ROT_270))
+            {
+                invTransform ^= NATIVE_WINDOW_TRANSFORM_FLIP_V |
+                        NATIVE_WINDOW_TRANSFORM_FLIP_H;
+            }
             winWidth = s.active.h;
             winHeight = s.active.w;
         }

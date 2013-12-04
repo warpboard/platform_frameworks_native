@@ -74,7 +74,6 @@ public:
     // regions below are in window-manager space
     Region visibleRegion;
     Region coveredRegion;
-    Region visibleNonTransparentRegion;
     int32_t sequence;
 
     enum { // flags for doTransaction()
@@ -232,13 +231,6 @@ public:
      * (transparently or not) by another surface.
      */
     void setCoveredRegion(const Region& coveredRegion);
-
-    /*
-     * setVisibleNonTransparentRegion - called when the visible and
-     * non-transparent region changes.
-     */
-    void setVisibleNonTransparentRegion(const Region&
-            visibleNonTransparentRegion);
 
     /*
      * latchBuffer - called each time the screen is redrawn and returns whether

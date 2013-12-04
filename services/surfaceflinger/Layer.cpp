@@ -698,12 +698,6 @@ void Layer::setCoveredRegion(const Region& coveredRegion) {
     this->coveredRegion = coveredRegion;
 }
 
-void Layer::setVisibleNonTransparentRegion(const Region&
-        setVisibleNonTransparentRegion) {
-    // always called from main thread
-    this->visibleNonTransparentRegion = setVisibleNonTransparentRegion;
-}
-
 // ----------------------------------------------------------------------------
 // transaction
 // ----------------------------------------------------------------------------

@@ -61,7 +61,7 @@ void egl_tls_t::validateTLSKey()
 {
     struct TlsKeyInitializer {
         static void create() {
-            pthread_key_create(&sKey, (void (*)(void*))&eglReleaseThread);
+            pthread_key_create(&sKey, NULL);
         }
     };
     pthread_once(&sOnceKey, TlsKeyInitializer::create);

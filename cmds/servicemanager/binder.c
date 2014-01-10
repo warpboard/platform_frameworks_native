@@ -20,14 +20,14 @@
 void bio_init_from_txn(struct binder_io *io, struct binder_transaction_data *txn);
 
 #if TRACE
-void hexdump(void *_data, unsigned len)
+void hexdump(void *_data, size_t len)
 {
     unsigned char *data = _data;
-    unsigned count;
+    size_t count;
 
     for (count = 0; count < len; count++) {
         if ((count & 15) == 0)
-            fprintf(stderr,"%04x:", count);
+            fprintf(stderr,"%04zu:", count);
         fprintf(stderr," %02x %c", *data,
                 (*data < 32) || (*data > 126) ? '.' : *data);
         data++;
@@ -41,8 +41,8 @@ void hexdump(void *_data, unsigned len)
 void binder_dump_txn(struct binder_transaction_data *txn)
 {
     struct flat_binder_object *obj;
-    unsigned *offs = txn->data.ptr.offsets;
-    unsigned count = txn->offsets_size / 4;
+    size_t *offs = txn->data.ptr.offsets;
+    size_t count = txn->offsets_size / sizeof(size_t);
 
     fprintf(stderr,"  target %p  cookie %p  code %08x  flags %08x\n",
             txn->target.ptr, txn->cookie, txn->code, txn->flags);
@@ -88,23 +88,30 @@ struct binder_state
 {
     int fd;
     void *mapped;
-    unsigned mapsize;
+    size_t mapsize;
 };
 
-struct binder_state *binder_open(unsigned mapsize)
+struct binder_state *binder_open(size_t mapsize)
 {
     struct binder_state *bs;
+    struct binder_version vers;
 
     bs = malloc(sizeof(*bs));
     if (!bs) {
         errno = ENOMEM;
-        return 0;
+        return NULL;
     }
 
     bs->fd = open("/dev/binder", O_RDWR);
     if (bs->fd < 0) {
         fprintf(stderr,"binder: cannot open device (%s)\n",
                 strerror(errno));
+        goto fail_open;
+    }
+
+    if ((ioctl(bs->fd, BINDER_VERSION, &vers) == -1) ||
+        (vers.protocol_version != BINDER_CURRENT_PROTOCOL_VERSION)) {
+        fprintf(stderr, "binder: driver version differs from user space\n");
         goto fail_open;
     }
 
@@ -116,15 +123,13 @@ struct binder_state *binder_open(unsigned mapsize)
         goto fail_map;
     }
 
-        /* TODO: check version */
-
     return bs;
 
 fail_map:
     close(bs->fd);
 fail_open:
     free(bs);
-    return 0;
+    return NULL;
 }
 
 void binder_close(struct binder_state *bs)
@@ -139,7 +144,7 @@ int binder_become_context_manager(struct binder_state *bs)
     return ioctl(bs->fd, BINDER_SET_CONTEXT_MGR, 0);
 }
 
-int binder_write(struct binder_state *bs, void *data, unsigned len)
+int binder_write(struct binder_state *bs, void *data, size_t len)
 {
     struct binder_write_read bwr;
     int res;
@@ -159,7 +164,7 @@ int binder_write(struct binder_state *bs, void *data, unsigned len)
 
 void binder_send_reply(struct binder_state *bs,
                        struct binder_io *reply,
-                       void *buffer_to_free,
+                       const void *buffer_to_free,
                        int status)
 {
     struct {
@@ -329,7 +334,7 @@ int binder_call(struct binder_state *bs,
     bwr.write_size = sizeof(writebuf);
     bwr.write_consumed = 0;
     bwr.write_buffer = (unsigned) &writebuf;
-    
+
     hexdump(msg->data0, msg->data - msg->data0);
     for (;;) {
         bwr.read_size = sizeof(readbuf);
@@ -363,7 +368,7 @@ void binder_loop(struct binder_state *bs, binder_handler func)
     bwr.write_size = 0;
     bwr.write_consumed = 0;
     bwr.write_buffer = 0;
-    
+
     readbuf[0] = BC_ENTER_LOOPER;
     binder_write(bs, readbuf, sizeof(unsigned));
 
@@ -401,9 +406,9 @@ void bio_init_from_txn(struct binder_io *bio, struct binder_transaction_data *tx
 }
 
 void bio_init(struct binder_io *bio, void *data,
-              uint32_t maxdata, uint32_t maxoffs)
+              size_t maxdata, size_t maxoffs)
 {
-    uint32_t n = maxoffs * sizeof(uint32_t);
+    size_t n = maxoffs * sizeof(size_t);
 
     if (n > maxdata) {
         bio->flags = BIO_F_OVERFLOW;
@@ -424,7 +429,7 @@ static void *bio_alloc(struct binder_io *bio, uint32_t size)
     size = (size + 3) & (~3);
     if (size > bio->data_avail) {
         bio->flags |= BIO_F_OVERFLOW;
-        return 0;
+        return NULL;
     } else {
         void *ptr = bio->data;
         bio->data += size;
@@ -451,7 +456,7 @@ static struct flat_binder_object *bio_alloc_obj(struct binder_io *bio)
     struct flat_binder_object *obj;
 
     obj = bio_alloc(bio, sizeof(*obj));
-    
+
     if (obj && bio->offs_avail) {
         bio->offs_avail--;
         *bio->offs++ = ((char*) obj) - ((char*) bio->data0);
@@ -459,7 +464,7 @@ static struct flat_binder_object *bio_alloc_obj(struct binder_io *bio)
     }
 
     bio->flags |= BIO_F_OVERFLOW;
-    return 0;
+    return NULL;
 }
 
 void bio_put_uint32(struct binder_io *bio, uint32_t n)
@@ -503,7 +508,7 @@ void bio_put_ref(struct binder_io *bio, void *ptr)
 
 void bio_put_string16(struct binder_io *bio, const uint16_t *str)
 {
-    uint32_t len;
+    size_t len;
     uint16_t *ptr;
 
     if (!str) {
@@ -519,7 +524,8 @@ void bio_put_string16(struct binder_io *bio, const uint16_t *str)
         return;
     }
 
-    bio_put_uint32(bio, len);
+    /* Note: The payload will carry 32bit size instead of size_t */
+    bio_put_uint32(bio, (uint32_t) len);
     len = (len + 1) * sizeof(uint16_t);
     ptr = bio_alloc(bio, len);
     if (ptr)
@@ -529,7 +535,7 @@ void bio_put_string16(struct binder_io *bio, const uint16_t *str)
 void bio_put_string16_x(struct binder_io *bio, const char *_str)
 {
     unsigned char *str = (unsigned char*) _str;
-    uint32_t len;
+    size_t len;
     uint16_t *ptr;
 
     if (!str) {
@@ -544,6 +550,7 @@ void bio_put_string16_x(struct binder_io *bio, const char *_str)
         return;
     }
 
+    /* Note: The payload will carry 32bit size instead of size_t */
     bio_put_uint32(bio, len);
     ptr = bio_alloc(bio, (len + 1) * sizeof(uint16_t));
     if (!ptr)
@@ -554,14 +561,14 @@ void bio_put_string16_x(struct binder_io *bio, const char *_str)
     *ptr++ = 0;
 }
 
-static void *bio_get(struct binder_io *bio, uint32_t size)
+static void *bio_get(struct binder_io *bio, size_t size)
 {
     size = (size + 3) & (~3);
 
     if (bio->data_avail < size){
         bio->data_avail = 0;
         bio->flags |= BIO_F_OVERFLOW;
-        return 0;
+        return NULL;
     }  else {
         void *ptr = bio->data;
         bio->data += size;
@@ -576,10 +583,12 @@ uint32_t bio_get_uint32(struct binder_io *bio)
     return ptr ? *ptr : 0;
 }
 
-uint16_t *bio_get_string16(struct binder_io *bio, unsigned *sz)
+uint16_t *bio_get_string16(struct binder_io *bio, size_t *sz)
 {
-    unsigned len;
-    len = bio_get_uint32(bio);
+    size_t len;
+
+    /* Note: The payload will carry 32bit size instead of size_t */
+    len = (size_t) bio_get_uint32(bio);
     if (sz)
         *sz = len;
     return bio_get(bio, (len + 1) * sizeof(uint16_t));
@@ -587,8 +596,8 @@ uint16_t *bio_get_string16(struct binder_io *bio, unsigned *sz)
 
 static struct flat_binder_object *_bio_get_obj(struct binder_io *bio)
 {
-    unsigned n;
-    unsigned off = bio->data - bio->data0;
+    size_t n;
+    size_t off = bio->data - bio->data0;
 
         /* TODO: be smarter about this? */
     for (n = 0; n < bio->offs_avail; n++) {
@@ -598,7 +607,7 @@ static struct flat_binder_object *_bio_get_obj(struct binder_io *bio)
 
     bio->data_avail = 0;
     bio->flags |= BIO_F_OVERFLOW;
-    return 0;
+    return NULL;
 }
 
 void *bio_get_ref(struct binder_io *bio)

@@ -7,6 +7,9 @@
 
 #include "binder.h"
 
+#define LOG_TAG "BCTest"
+#include <cutils/log.h>
+
 void *svcmgr_lookup(struct binder_state *bs, void *target, const char *name)
 {
     void *ptr;
@@ -62,6 +65,10 @@ int main(int argc, char **argv)
     void *svcmgr = BINDER_SERVICE_MANAGER;
 
     bs = binder_open(128*1024);
+    if (!bs) {
+        fprintf(stderr, "failed to open binder driver\n");
+        return -1;
+    }
 
     argc--;
     argv++;

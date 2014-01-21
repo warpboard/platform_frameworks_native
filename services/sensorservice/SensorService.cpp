@@ -338,6 +338,10 @@ bool SensorService::threadLoop()
             break;
         }
 
+        if (count == 0) {
+            continue;
+        }
+
         // Poll has returned. Hold a wakelock.
         // Todo(): add a flag to the sensors definitions to indicate
         // the sensors which can wake up the AP

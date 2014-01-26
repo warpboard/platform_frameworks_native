@@ -234,11 +234,12 @@ static void early_egl_init(void)
     pthread_key_create(&gGLTraceKey, NULL);
     initEglTraceLevel();
 #endif
-    uint32_t addr = (uint32_t)((void*)gl_no_context);
-    android_memset32(
-            (uint32_t*)(void*)&gHooksNoContext,
-            addr,
-            sizeof(gHooksNoContext));
+    uintptr_t addr = (uintptr_t)((void*)gl_no_context);
+    uintptr_t *dst = (uintptr_t*)&gHooksNoContext;
+    size_t size = sizeof(gHooksNoContext) / sizeof(uintptr_t);
+    while (size--) {
+        *dst++ = addr;
+    }
 
     setGLHooksThreadSpecific(&gHooksNoContext);
 }

@@ -44,8 +44,8 @@ class DataType:
         self.name = name
 
     def __str__(self):
-        if self.name == "pointer":  # pointers map to the INT DataType
-            return "INT"
+        if self.name == "pointer":  # pointers map to the INT64 DataType
+            return "INT64"
         return self.name.upper()
 
     def getProtobufCall(self):
@@ -53,7 +53,7 @@ class DataType:
             raise ValueError("Attempt to set void value")
         elif self.name == "char" or self.name == "byte" \
                 or self.name == "pointer" or self.name == "enum":
-            return "add_intvalue((int)"
+            return "add_int64value((uintptr_t)"
         elif self.name == "int":
             return "add_intvalue("
         elif self.name == "float":

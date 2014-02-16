@@ -268,8 +268,13 @@ void *Loader::load_driver(const char* kind,
             String8 pattern;
             pattern.appendFormat("lib%s", kind);
             const char* const searchPaths[] = {
+#if defined(__LP64__)
+                    "/vendor/lib64/egl",
+                    "/system/lib64/egl"
+#else
                     "/vendor/lib/egl",
                     "/system/lib/egl"
+#endif
             };
 
             // first, we search for the exact name of the GLES userspace
@@ -310,7 +315,11 @@ void *Loader::load_driver(const char* kind,
             if (checkGlesEmulationStatus() == 0) {
                 ALOGD("Emulator without GPU support detected. "
                       "Fallback to software renderer.");
+#if defined(__LP64__)
+                result.setTo("/system/lib64/egl/libGLES_android.so");
+#else
                 result.setTo("/system/lib/egl/libGLES_android.so");
+#endif
                 return true;
             }
 

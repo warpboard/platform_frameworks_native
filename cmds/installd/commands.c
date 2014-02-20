@@ -1211,3 +1211,23 @@ fail:
     }
     return -1;
 }
+
+int restorecon_data()
+{
+    char *data_dir = build_string2(android_data_dir.path, PRIMARY_USER_PREFIX);
+    char *user_dir = build_string2(android_data_dir.path, SECONDARY_USER_PREFIX);
+
+    unsigned int flags = SELINUX_ANDROID_RESTORECON_RECURSE |
+            SELINUX_ANDROID_RESTORECON_DATADATA;
+
+    int ret = 0;
+    if (selinux_android_restorecon(data_dir, flags) < 0) {
+        ret |= -1;
+    }
+
+    if (selinux_android_restorecon(user_dir, flags) < 0) {
+        ret |= -1;
+    }
+
+    return ret;
+}

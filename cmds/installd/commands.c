@@ -1235,31 +1235,19 @@ fail:
     return -1;
 }
 
-int restorecon_data()
+int restorecon_data(const char* pkgDir, const char* seinfo, uid_t uid)
 {
-    char *data_dir = build_string2(android_data_dir.path, PRIMARY_USER_PREFIX);
-    char *user_dir = build_string2(android_data_dir.path, SECONDARY_USER_PREFIX);
+    // SELINUX_ANDROID_RESTORECON_DATADATA flag is set by libselinux. Not needed here.
+    unsigned int flags = SELINUX_ANDROID_RESTORECON_RECURSE;
 
-    unsigned int flags = SELINUX_ANDROID_RESTORECON_RECURSE |
-            SELINUX_ANDROID_RESTORECON_DATADATA;
-
-    int ret = 0;
-
-    if (!data_dir || !user_dir) {
+    if (!pkgDir || !seinfo) {
         return -1;
     }
 
-    if (selinux_android_restorecon(data_dir, flags) < 0) {
-        ALOGE("restorecon failed for %s: %s\n", data_dir, strerror(errno));
-        ret |= -1;
+    if (selinux_android_restorecon_pkgdir(pkgDir, seinfo, uid, flags) < 0) {
+        ALOGE("restorecon failed for %s: %s\n", pkgDir, strerror(errno));
+        return -1;
     }
 
-    if (selinux_android_restorecon(user_dir, flags) < 0) {
-        ALOGE("restorecon failed for %s: %s\n", user_dir, strerror(errno));
-        ret |= -1;
-    }
-
-    free(data_dir);
-    free(user_dir);
-    return ret;
+    return 0;
 }
